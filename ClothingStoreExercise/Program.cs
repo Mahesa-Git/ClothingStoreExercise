@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ClothingStoreExercise
 {
@@ -11,6 +13,7 @@ namespace ClothingStoreExercise
         public static int index = 0;
         static void Main(string[] args)
         {
+            FileCheck();
             while (state != MenuState.Exit)
             {
                 switch (state)
@@ -36,8 +39,9 @@ namespace ClothingStoreExercise
                         break;
                 }
             }
+            UpdateFile();
         }
-        static int TryCatchInt()
+        static int TryCatchInt(int maxValue)
         {
             while (true)
             {
@@ -47,6 +51,12 @@ namespace ClothingStoreExercise
                     int returnValue = Convert.ToInt32(input);
                     if (returnValue < 0)
                         returnValue = 0;
+                    if (returnValue > maxValue)
+                    {
+                        Console.WriteLine("Wrong input. Try again:");
+                        continue;
+                    }
+                        
                     return returnValue;
                 }
                 catch //(Exception e)
@@ -56,7 +66,7 @@ namespace ClothingStoreExercise
                 }
             }
         }
-        static void ShopMethod()
+        private static void ShopMethod()
         {
             
             bool isRunning = true;
@@ -93,7 +103,7 @@ namespace ClothingStoreExercise
 
                     case ConsoleKey.C:
                         if (shoppingCart.Count == 0)
-                            Console.WriteLine("\nNo produtcs added to cart yet!");
+                            Console.WriteLine("\nNo products added to cart yet!");
                         else
                         {
                             int totalAmount = 0;
@@ -119,7 +129,7 @@ namespace ClothingStoreExercise
                 Console.ReadKey(true);
             }
         }
-        static void AdminMethod()
+        private static void AdminMethod()
         {
             Console.Clear();
             Console.WriteLine("Register new product for sale\n");
@@ -134,7 +144,7 @@ namespace ClothingStoreExercise
                     Console.Write($"[{numberIndexOne}] {garmentName}\n");
                     numberIndexOne++;
                 }
-                int garmentType = TryCatchInt();
+                int garmentType = TryCatchInt(6);
                 Console.Clear();
                 Console.WriteLine($"{Enum.GetName(typeof(GarmentType), garmentType)} selected.");
                 garment.GarmentType = garmentType;
@@ -146,7 +156,7 @@ namespace ClothingStoreExercise
                     Console.Write($"[{numberIndexTwo}] {garmentSize}\n");
                     numberIndexTwo++;
                 }
-                int size = TryCatchInt();
+                int size = TryCatchInt(5);
                 Console.Clear();
                 Console.WriteLine($"{Enum.GetName(typeof(Size), size)} selected.");
                 garment.Size = size;
@@ -158,13 +168,13 @@ namespace ClothingStoreExercise
                     Console.Write($"[{numberIndexThree}] {garmentColor}\n");
                     numberIndexThree++;
                 }
-                int color = TryCatchInt();
+                int color = TryCatchInt(5);
                 Console.Clear();
                 Console.WriteLine($"{Enum.GetName(typeof(Color), color)} selected.");
                 garment.Color = color;
 
                 Console.WriteLine("Enter garment price (SEK):");
-                int price = TryCatchInt();
+                int price = TryCatchInt(99999);
                 Console.Clear();
                 Console.WriteLine($"{price} SEK entered.");
                 garment.Price = price;
@@ -177,7 +187,7 @@ namespace ClothingStoreExercise
             Console.Clear();
             state = MenuState.Menu;
         }
-        static void MainMenu()
+        private static void MainMenu()
         {
             Console.Clear();
             Console.WriteLine("*EXERCISE: CLOTHING STORE*\n\n[1]Main menu\n[2]Admin(register)\n[3]Shop\n[4]Exit");
@@ -200,6 +210,45 @@ namespace ClothingStoreExercise
                     Console.WriteLine("Wrong key pressed. Try again.");
                     Console.ReadKey(true);
                     break;
+            }
+        }
+        private static void FileCheck()
+        {
+            if (!File.Exists("clothes.txt"))
+            {
+                File.Create("clothes.txt").Close();
+            }
+            else
+            {
+                string[] readLines = File.ReadAllLines("clothes.txt");
+                foreach (string lines in readLines)
+                {
+
+                    Garment garment = default;
+                    string[] splitLinesOne = lines.Split(',');
+                    string[] splitElementGarment = splitLinesOne[0].Split(':');
+                    string[] splitElementSize = splitLinesOne[1].Split(':');
+                    string[] splitElementColor = splitLinesOne[2].Split(':');
+                    
+                    garment.GarmentType = Convert.ToInt32(splitElementGarment[0]);
+                    garment.Size = Convert.ToInt32(splitElementSize[0]);
+                    garment.Color = Convert.ToInt32(splitElementColor[0]);
+                    garment.Price = Convert.ToInt32(splitLinesOne[3]);
+                    store.Add(garment);
+                }
+            }
+        }
+        private static void UpdateFile() //writes to file.
+        {
+            using (StreamWriter sw = new StreamWriter("clothes.txt", false)) //append set to false to avoid repetetive writing.
+            {
+                foreach (Garment stuff in store)
+                {
+                    sw.WriteLine($"{stuff.GarmentType}:{Enum.GetName(typeof(GarmentType),stuff.GarmentType)}," +
+                                 $"{stuff.Size}:{Enum.GetName(typeof(Size), stuff.Size)}," +
+                                 $"{stuff.Color}:{Enum.GetName(typeof(Color), stuff.Color)}," +
+                                 $"{stuff.Price}");
+                }
             }
         }
     }
